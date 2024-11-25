@@ -1,0 +1,9 @@
+[package]
+name = "test-macro"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+lazy_marshal = { path = "../lazy_marshal" }
+lazy_marshal_derive = { path = "../lazy_marshal_derive" }

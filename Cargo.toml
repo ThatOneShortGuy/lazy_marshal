@@ -1,0 +1,4 @@
+[workspace]
+members = ["lazy_marshal", "lazy_marshal_derive", "test-macro"]
+resolver = "2"
+

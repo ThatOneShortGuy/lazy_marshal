@@ -1,0 +1,13 @@
+[package]
+name = "lazy_marshal"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+paste = { version = "1.0", optional = true }
+lazy_marshal_derive = { path = "../lazy_marshal_derive", optional = true}
+
+[features]
+default = ["tuples", "derive"]
+tuples = ["paste"]
+derive = ["lazy_marshal_derive"]
