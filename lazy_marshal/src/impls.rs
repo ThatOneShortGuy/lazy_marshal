@@ -8,6 +8,7 @@ use crate::{
 };
 
 impl Marshal for bool {
+    #[inline]
     fn marshal(self) -> impl Iterator<Item = u8> {
         let d: u8 = match self {
             true => 1,
@@ -18,6 +19,7 @@ impl Marshal for bool {
 }
 
 impl UnMarshal for bool {
+    #[inline]
     fn unmarshal(data: &mut impl Iterator<Item = u8>) -> Result<Self, MarshalError> {
         Ok(match u8::unmarshal(data)? {
             0 => false,
@@ -34,17 +36,22 @@ macro_rules! primative_nums {
         impl Marshal for $ty {
             #[inline]
             fn marshal(self) -> impl Iterator<Item = u8> {
-                self.to_be_bytes().into_iter()
+                self.to_le_bytes().into_iter()
             }
         }
 
         impl UnMarshal for $ty {
             fn unmarshal(data: &mut impl Iterator<Item = u8>) -> Result<Self, MarshalError> {
-                let d = match readn_to_vec(data, std::mem::size_of::<Self>()) {
-                    Ok(a) => a,
-                    Err(e) => Err(MarshalError::InvalidSizedDecode(e))?,
-                };
-                Ok(Self::from_be_bytes(d.try_into().unwrap()))
+                const TY_SIZE: usize = std::mem::size_of::<$ty>();
+                #[allow(invalid_value)]
+                let mut d: [u8; TY_SIZE] = unsafe { std::mem::MaybeUninit::uninit().assume_init() };
+                for i in 0..TY_SIZE {
+                    d[i] = match data.next() {
+                        Some(val) => val,
+                        None => Err(MarshalError::InvalidSizedDecode(i))?,
+                    }
+                }
+                Ok(Self::from_le_bytes(d))
             }
         }
     };
@@ -52,7 +59,7 @@ macro_rules! primative_nums {
         impl Marshal for $ty {
             #[inline]
             fn marshal(self) -> impl Iterator<Item = u8> {
-                (self as $cast).to_be_bytes().into_iter()
+                (self as $cast).to_le_bytes().into_iter()
             }
         }
 
@@ -62,7 +69,7 @@ macro_rules! primative_nums {
                     Ok(a) => a,
                     Err(e) => Err(MarshalError::InvalidSizedDecode(e))?,
                 };
-                Ok($cast::from_be_bytes(d.try_into().unwrap())
+                Ok($cast::from_le_bytes(d.try_into().unwrap())
                     .try_into()
                     .map_err(|_| MarshalError::InvalidDecode)?)
             }
