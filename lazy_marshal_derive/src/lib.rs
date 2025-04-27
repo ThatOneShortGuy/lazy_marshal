@@ -174,7 +174,7 @@ fn impl_unmarshal_macro(ast: &syn::DeriveInput) -> TokenStream {
         }
     };
 
-    let gen = quote! {
+    let generated = quote! {
         #[automatically_derived]
         impl #impl_gen UnMarshal for #name #ty_gen #where_gen {
             fn unmarshal(data: &mut impl Iterator<Item = u8>) -> Result<Self, MarshalError> {
@@ -182,5 +182,5 @@ fn impl_unmarshal_macro(ast: &syn::DeriveInput) -> TokenStream {
             }
         }
     };
-    gen.into()
+    generated.into()
 }

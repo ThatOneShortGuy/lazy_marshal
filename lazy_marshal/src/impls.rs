@@ -107,7 +107,7 @@ impl Marshal for String {
     }
 }
 
-impl<T: Marshal> Marshal for PhantomData<T> {
+impl<T> Marshal for PhantomData<T> {
     fn marshal(self) -> impl Iterator<Item = u8> {
         std::iter::empty()
     }
@@ -129,6 +129,24 @@ impl<T: Marshal + Clone> Marshal for &[T] {
         let len = self.len();
         let d = self.into_iter().cloned().map(|v| v.marshal()).flatten();
         len.marshal().chain(d)
+    }
+}
+
+impl Marshal for Box<[u8]> {
+    fn marshal(self) -> impl Iterator<Item = u8> {
+        let len = self.len();
+        len.marshal().chain(IntoIterator::into_iter(self))
+    }
+}
+
+impl UnMarshal for Box<[u8]> {
+    fn unmarshal(data: &mut impl Iterator<Item = u8>) -> Result<Self, MarshalError> {
+        let len = usize::unmarshal(data)?;
+        let d = match readn_to_vec(data, len) {
+            Ok(v) => v,
+            Err(e) => Err(MarshalError::InvalidSizedDecode(e))?,
+        };
+        Ok(d.into_boxed_slice())
     }
 }
 
